@@ -7,10 +7,12 @@ def generate_bulk_actions(file, index, pipeline, skip_first_line, max_docs):
         for idx, line in enumerate(f.readlines()):
             if skip_first_line and idx ==0:
                 continue
+            
             if max_docs != -1:
                 stop_idx = max_docs + 1 if skip_first_line else max_docs
                 if idx == stop_idx:
                     break
+                
             action = {
                 '_index': index,
                 '_source': {
@@ -19,6 +21,7 @@ def generate_bulk_actions(file, index, pipeline, skip_first_line, max_docs):
             }
             if pipeline:
                 action['pipeline'] = pipeline
+                
             yield action
 
 def main():
@@ -33,14 +36,24 @@ def main():
     args = parser.parse_args()
 
     es_host = args.host or 'http://localhost:9200'
+    
+    print("es_host: ", es_host)
+    print("args.files: ", args.file)
+    print("args.index: ", args.index)
+    print("args.pipeline: ", args.pipeline)
+    print("arg.skip_first_line: ", args.skip_first_line)
 
-    es = Elasticsearch([es_host])
+    es = Elasticsearch(es_host)
     print('-- elasticsearch host set to :', es_host)
 
     successes = 0
+    
+
     for ok, _ in streaming_bulk(client=es, actions= generate_bulk_actions(args.file, args.index, args.pipeline or '', 
     args.skip_first_line, args.max_docs or -1)):
-        successes += ok
-    
+        successes += ok       
+ 
+    print("Total success: ", successes)
+        
 if __name__ == "__main__":
     main()
